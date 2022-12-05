@@ -22,8 +22,6 @@ export default class Layout {
 		onWindowResize(() => {
 			calcViewportHeight();
 		});
-
 		this.loadFunc();
 	}
 }
-

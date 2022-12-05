@@ -1,4 +1,10 @@
 {
+	"settings": {
+		"import/extensions": [
+			".js",
+			".jsx"
+		]
+	},
 	"extends": "airbnb",
 	"env": {
 		"node": true,
