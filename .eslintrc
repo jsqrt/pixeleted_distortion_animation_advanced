@@ -1,12 +1,14 @@
 {
-  "import/resolver": {
-    "node": {
-      "extensions": [
-        ".js",
-        ".jsx"
-      ]
-    }
-  },
+	"settings": {
+		"import/resolver": {
+			"node": {
+				"extensions": [
+					".js",
+					".jsx"
+				]
+			}
+		}
+	},
 	"extends": "airbnb",
 	"env": {
 		"node": true,
