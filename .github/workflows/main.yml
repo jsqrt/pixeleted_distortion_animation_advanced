@@ -1,24 +1,29 @@
-on: push
+on:
+  push:
+    branches:
+    - main
+
 name: Deploy website to testing host 🚀
 jobs:
   web-deploy:
-    name: 🎉 Deploy
+    name: Deploy
     runs-on: ubuntu-latest
     steps:
-    - name: 🚚 Get latest code
+    - name: Get latest code
       uses: actions/checkout@v2
 
     - name: Use Node.js 16
       uses: actions/setup-node@v2
       with:
         node-version: '16'
+
+    - name: Installing packages
+      run: npm install --legacy-peer-deps
       
-    - name: 🔨 Build Project
-      run: |
-        npm install --legacy-peer-deps
-        npm run dev-build
+    - name: Build Project
+      run: npm run dev-build
     
-    - name: 📂 Deploy to host
+    - name: Deploying to the server
       uses: SamKirkland/FTP-Deploy-Action@4.3.3
       with:
         server: ${{ secrets.SERVER }}
@@ -32,3 +37,4 @@ jobs:
           **/.git*
           **/.git*/**
           **/node_modules/**
+          
