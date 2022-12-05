@@ -7,14 +7,22 @@ jobs:
     steps:
     - name: 🚚 Get latest code
       uses: actions/checkout@v2
+      
+    - name: 🔨 Build Project
+      run: |
+        npm install
+        npm run dev-build
     
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@4.3.3
       with:
         server: ${{ secrets.SERVER }}
         username: ${{ secrets.USERNAME }}
-        server-dir: ./2022/unnamed_project/
         password: ${{ secrets.PASSWORD }}
+        
+        local-dir: ./dist/
+        server-dir: ./2022/unnamed_project/        
+        
         exclude: |
           **/.git*
           **/.git*/**
