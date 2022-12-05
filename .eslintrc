@@ -1,8 +1,4 @@
 {
-	"import/extensions": [
-		".js",
-		".jsx"
-	],
   "import/resolver": {
     "node": {
       "extensions": [
