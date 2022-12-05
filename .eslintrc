@@ -1,4 +1,8 @@
 {
+	"import/extensions": [
+		".js",
+		".jsx"
+	],
 	"settings": {
 		"import/extensions": [
 			".js",
