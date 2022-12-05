@@ -24,6 +24,6 @@ requireAll(require.context('./images/icons/sprite_icons/', true, /\.svg$/));
 
 // -------------------  init App
 documentReady(() => {
-	const appInit = new App();
+	const appInit = new App(); // 12
 });
 // -------------------  init App##
