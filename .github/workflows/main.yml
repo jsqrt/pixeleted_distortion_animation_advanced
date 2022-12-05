@@ -8,12 +8,17 @@ jobs:
     - name: 🚚 Get latest code
       uses: actions/checkout@v2
       
+    - name: Use Node.js 16
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+      
     - name: 🔨 Build Project
       run: |
         npm install --legacy-peer-deps
         npm run dev-build
     
-    - name: 📂 Sync files
+    - name: 📂 Deploy to host
       uses: SamKirkland/FTP-Deploy-Action@4.3.3
       with:
         server: ${{ secrets.SERVER }}
@@ -27,4 +32,3 @@ jobs:
           **/.git*
           **/.git*/**
           **/node_modules/**
-          fileToExclude.txt
