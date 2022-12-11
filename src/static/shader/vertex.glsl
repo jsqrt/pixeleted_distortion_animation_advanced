@@ -19,7 +19,7 @@ void main() {
 	vec3 pos = position;
 	pos.x += sin(move*aSpeed)*3.;
 	pos.y += sin(move*aSpeed)*3.;
-	pos.z = mod(position.z + ( move * 200.) * aSpeed + aOffset, 2000.) - 1000.;
+	pos.z = (mod(position.z + ( move * 200.) * aSpeed + aOffset, 2000.) - 1000.) * 2.;
 
 	vec3 stable = position;
 	float dist = distance(stable.xy, mouse);
