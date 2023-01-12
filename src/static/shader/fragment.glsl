@@ -1,16 +1,10 @@
-// varying vec2 vCoordinates;
-
-// void main()	{
-// 	gl_FragColor = vec4(vCoordinates.x/512.,vCoordinates.y/512.,0.,1.);
-// }
-
 varying vec2 vCoordinates;
 varying vec3 vPos;
-// uniform sampler2D can;
+
 uniform sampler2D t1;
 uniform sampler2D t2;
 uniform sampler2D mask;
-uniform float move;
+
 uniform float displacement;
 uniform float tt1alpha;
 uniform float tt2alpha;

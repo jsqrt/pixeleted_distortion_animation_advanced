@@ -1,6 +1,6 @@
 varying vec2 vUv;
-varying vec3 vPos;
 varying vec2 vCoordinates;
+varying vec3 vPos;
 
 attribute vec3 aCoordinates;
 attribute float aSpeed;
@@ -8,11 +8,11 @@ attribute float aOffset;
 attribute float aPress;
 attribute float aDirection;
 
-uniform float move;
 uniform float time;
-uniform vec2 mouse;
+uniform float wheelDelta;
 uniform float mousePressed;
 uniform float transition;
+uniform vec2 mouse;
 
 void main() {
   vUv = uv;
