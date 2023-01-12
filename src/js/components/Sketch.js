@@ -54,7 +54,7 @@ export default class Sketch {
 			this.addObjects();
 			this.resize();
 			this.mouseEffects();
-			this.settings();
+			// this.settings();
 			this.render();
 			this.setupResize();
 		});
