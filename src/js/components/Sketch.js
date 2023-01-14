@@ -40,25 +40,23 @@ export default class Sketch {
 			3000,
 		);
 
-		// var frustumSize = 10;
-		// var aspect = window.innerWidth / window.innerHeight;
-		// this.camera = new T.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, -1000, 1000 );
 		this.camera.position.set(0, 0, 1400);
-		// this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 		this.time = 0;
-		this.move = 0;
+		this.wheelDelta = 0;
 		this.distortionProgress = 0;
 		this.displacement = 0;
 		this.snapIndex = 0;
 		this.currentSlideRealIndex = 0;
 
 		this.isPlaying = true;
+		this.pressTm = null;
+		this.test = false;
 
 		this.loadObjects().then(() => {
 			this.addObjects();
 			this.resize();
 			this.mouseEffects();
-			this.settings();
+			// this.settings();
 			this.render();
 			this.setupResize();
 		});
@@ -67,11 +65,30 @@ export default class Sketch {
 	onMouseMove(e) {
 		this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
 		this.mouse.y = -((e.clientY / window.innerHeight) * 2 - 1);
+
 		this.raycaster.setFromCamera(this.mouse, this.camera);
 
-		this.intersects = this.raycaster.intersectObject(this.test);
+		this.intersects = this.raycaster.intersectObject(this.coverMesh);
+
 		this.point.x = this.intersects[0]?.point.x || this.point.x;
 		this.point.y = this.intersects[0]?.point.y || this.point.y;
+
+		if (this.intersects[0]) {
+			gsap.to(this.material.uniforms.mousePressed, {
+				duration: 2,
+				value: 1,
+				ease: 'elastic.out(1, 0.3)',
+			});
+
+			clearTimeout(this.pressTm);
+			this.pressTm = setTimeout(() => {
+				gsap.to(this.material.uniforms.mousePressed, {
+					duration: 2,
+					value: 0,
+					ease: 'elastic.out(1, 0.3)',
+				});
+			}, 300);
+		}
 	}
 
 	updateSliderPos(direction) {
@@ -81,119 +98,101 @@ export default class Sketch {
 		this.currentSlideRealIndex = Math.abs(this.snapIndex % this.textures.length);
 	}
 
-	mouseEffects() {
-		this.test = new T.Mesh(new T.PlaneGeometry(2000, 2000), new T.MeshBasicMaterial());
+	handleMouseWheel(e) {
+		if (this.isBackAnimation) return;
 
-		let animTimeout = setTimeout(0);
+		this.direction = e.wheelDeltaY > 0;
+		this.updateSliderPos(this.direction);
+		this.mainTexture = this.textures[this.prevSlideIndex];
+		this.dispTexture = this.textures[this.currentSlideRealIndex];
+
+		this.wheelDelta += e.wheelDeltaY / 20;
+		clearTimeout(this.animTimeout);
+
+		this.material.uniforms.displacement.value = 0;
+
+		gsap.to(this.material.uniforms.displacement, {
+			duration: 0.8,
+			value: 0.7,
+		});
+
+		if (this.distortionProgress === 1) {
+			this.distortionProgress = 0;
+			gsap.to(this.material.uniforms.transition, {
+				duration: 2,
+				ease: CustomEase.create("custom", "M0,0 C0.034,0.532 0.192,0.901 0.366,0.95 0.502,0.988 0.428,0.984 1,1 "),
+				value: 0,
+			});
+		} else {
+			gsap.to(this.material.uniforms.wheelDelta, {
+				duration: 2,
+				ease: CustomEase.create("custom", "M0,0 C0.034,0.532 0.192,0.901 0.366,0.95 0.502,0.988 0.428,0.984 1,1 "),
+				value: this.wheelDelta,
+			});
+		}
+
+		this.animTimeout = setTimeout(() => {
+			this.isBackAnimation = true;
+
+			gsap.to(this.material.uniforms.transition, {
+				duration: 0.7,
+				ease: 'Power2.out',
+				value: 1,
+				onComplete: () => {
+					this.distortionProgress = 1;
+					this.isBackAnimation = false;
+				},
+			});
+			gsap.to(this.material.uniforms.displacement, {
+				duration: 0.6,
+				value: 1,
+			});
+		}, 2000);
+	}
+
+	mouseEffects() {
+		this.animTimeout = setTimeout(0);
+		this.isBackAnimation = true;
+		this.isWarpAnimation = false;
 
 		gsap.to(this.material.uniforms.transition, {
 			duration: 0.7,
 			ease: 'Power2.out',
 			value: 1,
-			onComplete: () => { this.distortionProgress = 1; },
+			onComplete: () => {
+				this.distortionProgress = 1;
+				this.isBackAnimation = false;
+			},
 		});
 
-		window.addEventListener('mousedown', (e) => {
-			gsap.to(this.material.uniforms.mousePressed, {
-				duration: 1,
-				value: 1,
-				ease: 'elastic.out(1, 0.3)',
-			});
-		});
+		// window.addEventListener('mousedown', (e) => {
+		// 	gsap.to(this.material.uniforms.mousePressed, {
+		// 		duration: 1,
+		// 		value: 1,
+		// 		ease: 'elastic.out(1, 0.3)',
+		// 	});
+		// });
 
-		window.addEventListener('mouseup', (e) => {
-			gsap.to(this.material.uniforms.mousePressed, {
-				duration: 1,
-				value: 0,
-				ease: 'elastic.out(1, 0.3)',
-			});
-		});
+		// window.addEventListener('mouseup', (e) => {
+		// 	gsap.to(this.material.uniforms.mousePressed, {
+		// 		duration: 1,
+		// 		value: 0,
+		// 		ease: 'elastic.out(1, 0.3)',
+		// 	});
+		// });
 
-		window.addEventListener('mousewheel', (e) => {
-			this.direction = e.wheelDeltaY > 0;
-			this.updateSliderPos(this.direction);
-			// this.mainTexture = this.textures[this.prevSlideIndex];
-
-			this.move += e.wheelDeltaY / 20;
-			clearTimeout(animTimeout);
-
-			if (this.distortionProgress === 1) {
-				this.distortionProgress = 0;
-				gsap.to(this.material.uniforms.transition, {
-					duration: 2,
-					ease: CustomEase.create("custom", "M0,0 C0.034,0.532 0.192,0.901 0.366,0.95 0.502,0.988 0.428,0.984 1,1 "),
-					value: 0,
-				});
-			} else {
-				// gsap.to(this.material.uniforms.tt1alpha, {
-				// 	duration: 0.6,
-				// 	value: 0,
-				// });
-
-				// gsap.to(this.material.uniforms.tt2alpha, {
-				// 	duration: 0.6,
-				// 	value: 0,
-				// 	onComplete: () => {
-				// 	}
-				// });
-
-				gsap.to(this.material.uniforms.move, {
-					duration: 2,
-					ease: CustomEase.create("custom", "M0,0 C0.034,0.532 0.192,0.901 0.366,0.95 0.502,0.988 0.428,0.984 1,1 "),
-					value: this.move,
-				});
-			}
-
-			this.dispTexture = this.textures[this.currentSlideRealIndex];
-			this.material.uniforms.displacement.value = 0;
-
-			// gsap.fromTo(this.material.uniforms.tt2alpha, {
-			// 	value: 0,
-			// }, {
-			// 	duration: 0.6,
-			// 	value: 1,
-			// 	onComplete: () => {
-			// 	},
-			// });
-
-			// t1 -> t2 = t2 -> t1
-
-			// gsap.to(this.material.uniforms.tt2alpha, {
-			// 	duration: 2,
-			// 	ease: 'Power1.in',
-			// 	delay: 4,
-			// 	value: 1,
-			// });
-
-			gsap.to(this.material.uniforms.displacement, {
-				duration: 0.6,
-				value: 0.5,
-			});
-
-			animTimeout = setTimeout(() => {
-				gsap.to(this.material.uniforms.transition, {
-					duration: 0.7,
-					ease: 'Power2.out',
-					value: 1,
-					onComplete: () => { this.distortionProgress = 1; },
-				});
-				gsap.to(this.material.uniforms.displacement, {
-					duration: 0.6,
-					value: 1,
-				});
-			}, 2000);
-		});
+		window.addEventListener('mousewheel', this.handleMouseWheel.bind(this));
 		window.addEventListener('mousemove', this.onMouseMove.bind(this));
 	}
 
-	settings() {
-		let that = this;
-		this.settings = {
-			progress: 0,
-		};
-		this.gui = new dat.GUI();
-		this.gui.add(this.settings, 'progress', 0, 1, 0.01);
-	}
+	// settings() {
+	// 	let that = this;
+	// 	this.settings = {
+	// 		progress: 0,
+	// 	};
+	// 	this.gui = new dat.GUI();
+	// 	this.gui.add(this.settings, 'progress', 0, 1, 0.01);
+	// }
 
 	setupResize() {
 		window.addEventListener('resize', this.resize.bind(this));
@@ -243,7 +242,7 @@ export default class Sketch {
 
 		const t1prom = new Promise((resolve, reject) => {
 			textureLoader.load(
-				t1,
+				t2,
 				(data) => {
 					this.t1 = data;
 					resolve();
@@ -258,7 +257,7 @@ export default class Sketch {
 
 		const t2prom = new Promise((resolve, reject) => {
 			textureLoader.load(
-				t2,
+				t1,
 				(data) => {
 					this.t2 = data;
 					resolve();
@@ -313,16 +312,23 @@ export default class Sketch {
 
 	addObjects() {
 		const particalsCount = 512;
-		const array = () => new Float32Array((particalsCount ** 2) * 3);
+		const partcalsCountSqrt = particalsCount ** 2;
+		const array3 = () => new Float32Array(partcalsCountSqrt * 3);
+		const array1 = () => new Float32Array(partcalsCountSqrt);
+
 		this.geometry = new T.BufferGeometry();
-		this.positions = new T.BufferAttribute(array(), 3); // partical count * 3 coordinates
-		this.coordinates = new T.BufferAttribute(array(), 3); // partical count * 3 coordinates
-		this.speeds = new T.BufferAttribute(new Float32Array((particalsCount ** 2)), 1);
-		this.offset = new T.BufferAttribute(new Float32Array((particalsCount ** 2)), 1);
-		this.direction = new T.BufferAttribute(new Float32Array((particalsCount ** 2)), 1);
-		this.press = new T.BufferAttribute(new Float32Array((particalsCount ** 2)), 1);
+
+		this.positions = new T.BufferAttribute(array3(), 3); // partical count * 3 dimensionals
+		this.coordinates = new T.BufferAttribute(array3(), 3); // partical count * 3 dimensionals
+
+		this.speeds = new T.BufferAttribute(new Float32Array(array1()), 1);
+		this.offset = new T.BufferAttribute(new Float32Array(array1()), 1);
+		this.direction = new T.BufferAttribute(new Float32Array(array1()), 1);
+		this.press = new T.BufferAttribute(new Float32Array(array1()), 1);
+
 		this.textures = [this.t1, this.t2, this.t3];
 
+		this.coverMesh = new T.Mesh(new T.PlaneGeometry(2000, 2000), new T.MeshBasicMaterial());
 		this.material = new T.ShaderMaterial({
 			extensions: {
 				derivatives: '#extension GL_OES_standard_derivatives : enable',
@@ -341,10 +347,6 @@ export default class Sketch {
 					type: 't',
 					value: this.mask,
 				},
-				progress: {
-					type: 'f',
-					value: 0,
-				},
 				mouse: {
 					type: 'v2',
 					value: null,
@@ -357,7 +359,7 @@ export default class Sketch {
 					type: 'f',
 					value: 0,
 				},
-				move: {
+				wheelDelta: {
 					type: 'f',
 					value: 0,
 				},
@@ -435,15 +437,9 @@ export default class Sketch {
 		this.material.uniforms.t1.value = this.mainTexture;
 		this.material.uniforms.t2.value = this.dispTexture;
 
-		// this.material.uniforms.transition.value = this.settings.progress;
-
 		this.material.uniforms.time.value = this.time;
-
-		// console.log(this.displacement); //!
-
-		// this.material.uniforms.displacement.value = this.displacement;
-		// this.material.uniforms.move.value = this.move;
 		this.material.uniforms.mouse.value = this.point;
+
 		window.requestAnimationFrame(this.render.bind(this));
 		this.renderer.render(this.scene, this.camera);
 	}
