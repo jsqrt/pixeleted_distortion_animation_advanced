@@ -49,6 +49,8 @@ export default class Sketch {
 		this.currentSlideRealIndex = 0;
 
 		this.isPlaying = true;
+		this.pressTm = null;
+		this.test = false;
 
 		this.loadObjects().then(() => {
 			this.addObjects();
@@ -63,11 +65,30 @@ export default class Sketch {
 	onMouseMove(e) {
 		this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
 		this.mouse.y = -((e.clientY / window.innerHeight) * 2 - 1);
+
 		this.raycaster.setFromCamera(this.mouse, this.camera);
 
 		this.intersects = this.raycaster.intersectObject(this.coverMesh);
+
 		this.point.x = this.intersects[0]?.point.x || this.point.x;
 		this.point.y = this.intersects[0]?.point.y || this.point.y;
+
+		if (this.intersects[0]) {
+			gsap.to(this.material.uniforms.mousePressed, {
+				duration: 2,
+				value: 1,
+				ease: 'elastic.out(1, 0.3)',
+			});
+
+			clearTimeout(this.pressTm);
+			this.pressTm = setTimeout(() => {
+				gsap.to(this.material.uniforms.mousePressed, {
+					duration: 2,
+					value: 0,
+					ease: 'elastic.out(1, 0.3)',
+				});
+			}, 300);
+		}
 	}
 
 	updateSliderPos(direction) {
@@ -144,21 +165,21 @@ export default class Sketch {
 			},
 		});
 
-		window.addEventListener('mousedown', (e) => {
-			gsap.to(this.material.uniforms.mousePressed, {
-				duration: 1,
-				value: 1,
-				ease: 'elastic.out(1, 0.3)',
-			});
-		});
+		// window.addEventListener('mousedown', (e) => {
+		// 	gsap.to(this.material.uniforms.mousePressed, {
+		// 		duration: 1,
+		// 		value: 1,
+		// 		ease: 'elastic.out(1, 0.3)',
+		// 	});
+		// });
 
-		window.addEventListener('mouseup', (e) => {
-			gsap.to(this.material.uniforms.mousePressed, {
-				duration: 1,
-				value: 0,
-				ease: 'elastic.out(1, 0.3)',
-			});
-		});
+		// window.addEventListener('mouseup', (e) => {
+		// 	gsap.to(this.material.uniforms.mousePressed, {
+		// 		duration: 1,
+		// 		value: 0,
+		// 		ease: 'elastic.out(1, 0.3)',
+		// 	});
+		// });
 
 		window.addEventListener('mousewheel', this.handleMouseWheel.bind(this));
 		window.addEventListener('mousemove', this.onMouseMove.bind(this));
@@ -221,7 +242,7 @@ export default class Sketch {
 
 		const t1prom = new Promise((resolve, reject) => {
 			textureLoader.load(
-				t1,
+				t2,
 				(data) => {
 					this.t1 = data;
 					resolve();
@@ -236,7 +257,7 @@ export default class Sketch {
 
 		const t2prom = new Promise((resolve, reject) => {
 			textureLoader.load(
-				t2,
+				t1,
 				(data) => {
 					this.t2 = data;
 					resolve();

@@ -12,7 +12,6 @@ export default class App {
 
 		this.init = this.init.bind(this);
 		this.init();
-		console.log('gg'); //!
 	}
 
 	importPage() {
